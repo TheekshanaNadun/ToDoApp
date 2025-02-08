@@ -11,7 +11,7 @@ Route::put('/todos/{todo}/position', [TodoController::class, 'updatePosition']);
 Route::post('/todos', [TodoController::class, 'store']);
 Route::put('/todos/{id}', function ($id) {
     $todo = Todo::find($id);
-    $todo->completed = request()->boolean('completed'); // Force boolean type
+    $todo->completed = request()->boolean('completed');
     $todo->save();
     return $todo;
 });
