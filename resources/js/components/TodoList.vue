@@ -2,16 +2,13 @@
   <div class="container-fluid min-vh-100 bg-soft-primary">
     <div class="row justify-content-center py-5">
       <div class="col-12 col-xl-10">
-        <!-- Main Content Card -->
         <div class="card border-0 shadow-soft">
           <div class="card-body p-4">
-            <!-- Header -->
             <div class="text-center mb-5">
               <h1 class="h2 text-muted font-weight-light">📋 Todo Manager</h1>
               <p class="text-muted">Organize your tasks peacefully</p>
             </div>
 
-            <!-- Create Todo Section -->
             <div class="create-section mb-5 px-3 py-4 bg-white rounded-lg shadow-sm">
               <div class="row g-3 align-items-end">
                 <div class="col-12 col-md-5">
@@ -53,7 +50,6 @@
             </div>
 
             <div class="row g-4">
-  <!-- Pending Tasks Column -->
   <div class="col-12 col-md-6">
     <div class="todo-column bg-light p-4 rounded-lg shadow-sm h-100 border border-primary">
       <h4 class="text-primary mb-4 d-flex align-items-center">
@@ -61,30 +57,32 @@
         <span class="badge bg-primary text-white ms-2">{{ pendingTodos.length }}</span>
       </h4>
 
-      <!-- Pending Todo Items -->
       <div v-for="todo in pendingTodos" :key="todo.id" class="todo-item bg-white p-3 mb-3 rounded shadow-sm d-flex justify-content-between align-items-center">
-        <!-- Todo Details -->
         <div>
           <h5 class="mb-1">{{ todo.title }}</h5>
           <p class="mb-0 text-muted">Category: {{ todo.category || 'No Category' }}</p>
           <p class="mb-0 text-muted">Due Date: {{ formatDate(todo.due_date) }}</p>
         </div>
 
-        <!-- Actions -->
         <div>
-          <input type="checkbox" v-model="todo.completed" @change="updateTodo(todo)" class="form-check-input me-2">
+          <input 
+  type="checkbox"
+  :checked="todo.completed"
+  @change="updateTodo(todo, $event.target.checked)"
+  :disabled="todo.isUpdating"
+  class="form-check-input me-2"
+>
+
           <button @click.prevent.stop="deleteTodo(todo.id)" class="btn btn-danger btn-sm">Delete</button>
         </div>
       </div>
 
-      <!-- Empty State -->
       <div v-if="!pendingTodos.length" class="text-center text-muted mt-4">
         No pending tasks. 🎉
       </div>
     </div>
   </div>
 
-  <!-- Completed Tasks Column -->
   <div class="col-12 col-md-6">
     <div class="todo-column bg-light p-4 rounded-lg shadow-sm h-100 border border-success">
       <h4 class="text-success mb-4 d-flex align-items-center">
@@ -92,21 +90,17 @@
         <span class="badge bg-success text-white ms-2">{{ completedTodos.length }}</span>
       </h4>
 
-      <!-- Completed Todo Items -->
       <div v-for="todo in completedTodos" :key="todo.id" class="todo-item bg-light p-3 mb-3 rounded shadow-sm d-flex justify-content-between align-items-center">
-        <!-- Todo Details -->
         <div>
           <h5 class="mb-1">{{ todo.title }}</h5>
           <p class="mb-0 text-muted">Category: {{ todo.category || 'No Category' }}</p>
-          <p v-if="todo.due_date" class="mb-0 text-muted">Completed on: {{ formatDate(todo.due_date) }}</p>
-        </div>
+          <span :class="{'text-success': todo.completed, 'text-danger': !todo.completed}">
+           {{ todo.completed ? "Yes" : "No" }}
+           </span>         </div>
 
-        <!-- Actions -->
         <button @click.prevent.stop="deleteTodo(todo.id)" class="btn btn-danger btn-sm">Delete</button>
       </div>
-
-      <!-- Empty State -->
-      <div v-if="!completedTodos.length" class="text-center text-muted mt-4">
+      <div v-if="completedTodos.length" class="text-center text-muted mt-4">
         No completed tasks yet.
       </div>
     </div>
@@ -182,23 +176,23 @@ export default {
             }
         },
 
-        async updateTodo(todo) {
-            try {
-                const originalState = todo.completed
-                todo.completed = !originalState // Optimistic update
-                
-                await axios.put(`/todos/${todo.id}`, {
-                    title: todo.title,
-                    completed: todo.completed,
-                    category: todo.category,
-                    due_date: todo.due_date
-                })
-            } catch (error) {
-                this.error = 'Failed to update todo. Please try again.'
-                console.error(error)
-                todo.completed = !todo.completed // Revert on error
-            }
-        },
+        async updateTodo(todo, newCompletedState) {
+  const originalState = todo.completed;
+  todo.completed = newCompletedState;
+  todo.isUpdating = true;
+
+  try {
+    await axios.put(`/todos/${todo.id}`, { completed: newCompletedState });
+  } catch (error) {
+    todo.completed = originalState;
+  } finally {
+    todo.isUpdating = false;
+  }
+}
+
+
+,
+
 
         async deleteTodo(id) {
             if (!confirm('Are you sure you want to delete this todo?')) return

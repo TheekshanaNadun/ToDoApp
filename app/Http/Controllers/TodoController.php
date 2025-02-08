@@ -34,21 +34,25 @@ class TodoController extends Controller
         }
     }
 
-
+    public function show($id)
+    {
+        $todo = Todo::findOrFail($id);
+        return response()->json($todo);
+    }
 
 
     public function update(Request $request, Todo $todo)
     {
         $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'completed' => 'sometimes|boolean',
-            'category' => 'sometimes|string',
-            'due_date' => 'sometimes|date'
+            'completed' => 'required|boolean'
         ]);
-
+    
         $todo->update($validated);
-        return $todo;
+        
+        return response()->json($todo);
     }
+
+
     
 
     public function destroy(Todo $todo)
